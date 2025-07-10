@@ -89,6 +89,11 @@ namespace VMS.TPS
         private void ConvertStructures(List<Structure> toConvert, List<string> skipReasons)
         {
             int converted = 0;
+
+            // Create progress window
+            var progressWindow = CreateProgressWindow(toConvert.Count);
+            progressWindow.Show();
+
             foreach (Structure s in toConvert)
             {
                 try
@@ -96,13 +101,79 @@ namespace VMS.TPS
                     s.ConvertToHighResolution();
                     converted++;
                     skipReasons.Add($"{s.Id}: Successfully converted");
+
+                    // Update progress
+                    UpdateProgress(progressWindow, converted, toConvert.Count);
                 }
                 catch (Exception ex)
                 {
                     skipReasons.Add($"{s.Id}: FAILED - {ex.Message}");
                 }
             }
+
+            // Close progress window after a brief delay
+            System.Threading.Thread.Sleep(500);
+            progressWindow.Close();
+
             skipReasons.Insert(0, $"Successfully converted {converted}/{toConvert.Count} structures");
+        }
+
+        private Window CreateProgressWindow(int totalStructures)
+        {
+            var window = new Window
+            {
+                Title = "Converting Structures",
+                Width = 300,
+                Height = 100,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                Topmost = true
+            };
+
+            var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition());
+            grid.RowDefinitions.Add(new RowDefinition());
+
+            var label = new Label
+            {
+                Content = "Converting structures to high resolution...",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var progressLabel = new Label
+            {
+                Name = "ProgressLabel",
+                Content = $"0/{totalStructures}",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 14,
+                FontWeight = FontWeights.Bold
+            };
+
+            Grid.SetRow(label, 0);
+            Grid.SetRow(progressLabel, 1);
+
+            grid.Children.Add(label);
+            grid.Children.Add(progressLabel);
+
+            window.Content = grid;
+            return window;
+        }
+
+        private void UpdateProgress(Window progressWindow, int current, int total)
+        {
+            var grid = progressWindow.Content as Grid;
+            var progressLabel = grid.Children.OfType<Label>().FirstOrDefault(l => l.Name == "ProgressLabel");
+
+            if (progressLabel != null)
+            {
+                progressLabel.Content = $"{current}/{total}";
+            }
+
+            // Force UI update
+            progressWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
         }
 
         private void ShowScrollableMessage(List<string> messages, string title)
