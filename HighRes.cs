@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 
+[assembly: AssemblyVersion("1.0.0.1")]
 [assembly: ESAPIScript(IsWriteable = true)]
 
 namespace VMS.TPS
@@ -42,10 +44,14 @@ namespace VMS.TPS
                     {
                         skipReasons.Add($"{s.Id}: Unable to convert to high resolution");
                     }
-                    //else if (s.Name.Contains("ETD")) // not working
-                    //{
-                    //    skipReasons.Add($"{s.Id}: ETD structures do not require conversion");
-                    //}
+                    else if (s.Id.Contains("ETD"))
+                    {
+                        skipReasons.Add($"{s.Id}: ETD structures do not require conversion");
+                    }
+                    else if (s.Id.Contains("zOrig"))
+                    {
+                        skipReasons.Add($"{s.Id}: zOrig structures do not require conversion");
+                    }
                     //else if (s.IsEmpty)
                     //{
                     //    skipReasons.Add($"{s.Id}: Empty structure (no contours)");
